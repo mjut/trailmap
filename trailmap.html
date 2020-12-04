@@ -1,0 +1,165 @@
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+	<style>
+					body {
+							padding: 0;
+							margin: 0;
+			-webkit-touch-callout:none;
+	-webkit-user-select:none;
+	-khtml-user-select:none;
+	-moz-user-select:none;
+	-ms-user-select:none;
+	user-select:none;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
+					}
+					html, body, #mapid {
+						 height: 100%;
+						 width: 100%;
+					}
+		#locateButton {
+				position: absolute;
+				bottom: 30px;
+				left: 12px;
+				padding: 10px;
+				z-index: 400;
+			 font-size: 10px;
+		}
+		#helpButton {
+									position : absolute;
+									bottom: 30px;
+									left: 92px;
+									padding: 10px;
+									z-index: 400;
+									font-size: 10px;
+					}
+
+	</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+ integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+ crossorigin=""/>
+<!-- Make sure you put this AFTER Leaflet's CSS -->
+<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+ integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+ crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.4.0/gpx.min.js"></script>
+
+
+</head>
+
+<body>
+
+ <div id="mapid"></div>
+
+	<script>
+	//LatLng(50.876016, 0.221392)
+	var autoLocate;
+ 
+	var mymap = L.map('mapid').setView([50.876016, 0.231392], 6);
+	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+			maxZoom: 18,
+			opacity: 1,
+		 // id: 'mapbox/streets-v11',
+			tileSize: 512,
+			zoomOffset: -1,
+			detectRetina: true,
+			//accessToken: 'your.mapbox.access.token'
+			tap: true,
+	}).addTo(mymap);
+
+
+	window.onload = function() {
+		var clickTimer = null;
+		var timer = 0;
+		var delay = 1000;
+		var prevent = false;
+		var maxBounds = L.bounds();//{ _southWest: {}, _northEast: {}};
+		var urls = [
+			{ url: 'routes/jaegermeister2.gpx', color: '#ff0000' },
+			{ url: 'routes/Baerlauchweg.gpx', color: 'red' },
+			{ url: 'routes/Bombenkrater.gpx', color: 'pink' },
+		];
+		var loaded = 0;
+		var showOnly = ""; 
+		console.log( 'showonly', showOnly );
+		urls.forEach(function( el, index, array ) {
+			 var randomColor = Math.floor(Math.random()*16777215).toString(16);
+			// GPX plugin https://github.com/mpetazzoni/leaflet-gpx
+			if( (showOnly == null) || (showOnly == '')) {
+					
+			} else if (index != showOnly) {
+				return;
+			}
+			new L.GPX(el['url'], {
+				async: true,
+					marker_options: {
+						startIconUrl: "/pins/play-circle-regular.svg",
+						endIconUrl: null,
+						shadowUrl: null,
+						clickable: true,
+					},
+				polyline_options: {
+							//color: '#' + randomColor,
+					color: el['color'],
+							opacity: 0.8,
+							weight: 8,
+							lineCap: 'round'
+					},
+
+			}).on('loaded', function(e) {
+				loaded++;
+				var myBounds = e.target.getBounds();
+				if(typeof maxBounds == 'undefined' ) {
+																	maxBounds = e.target.getBounds();
+													}
+	
+				if( (typeof maxBounds.getSouthWest().lat == 'undefined') || myBounds.getSouthWest().lat < maxBounds.getSouthWest().lat ) {
+					maxBounds._southWest['lat'] = myBounds._southWest.lat;
+				}
+				if( (typeof maxBounds.getSouthWest().lng == 'undefined') || myBounds.getSouthWest().lng < maxBounds.getSouthWest().lng ) {
+					maxBounds._southWest['lng'] = myBounds._southWest.lng;
+				}
+				if( (typeof maxBounds.getNorthEast().lat == 'undefined') || myBounds.getNorthEast().lat > maxBounds.getNorthEast().lat ) {
+					maxBounds._northEast['lat'] = myBounds._northEast.lat;
+				}
+				if( (typeof maxBounds.getNorthEast().lng == 'undefined') || myBounds.getNorthEast().lng > maxBounds.getNorthEast().lng ) {
+					maxBounds._northEast['lng'] = myBounds._northEast.lng;
+				}    
+				if( showOnly || (loaded >= urls.length) ) {
+					mymap.fitBounds( maxBounds );
+				}
+	
+	
+			}).addTo(mymap)
+ 
+ 
+			.on('click', function (e) {
+				var gpx = e.target,
+					distM = gpx.get_distance(),
+					distKm = distM / 1000,
+					distKmRnd = distKm.toFixed(1),
+					eleGain = gpx.get_elevation_gain().toFixed(),
+					eleLoss = gpx.get_elevation_loss().toFixed(),
+					name = gpx.get_name();
+
+				gpx
+					.getLayers()[0]
+					.bindPopup(
+						"<h5><?php echo $trailname ?></h5>" +
+						"Strecke " + distKmRnd + " km </br>" +
+						"Höhenmeter " +	eleGain + " m </br>" +
+						"Tiefenmeter " + eleLoss +	" m"
+				);
+			});
+
+	 });
+
+	// call locate every 3 seconds... forever
+	setInterval(locate, 3000);
+
+}
+
+</script>
+
+</body>
