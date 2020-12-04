@@ -5,7 +5,7 @@ This is to generate a map with multiple gpx-files. With code from @ibrierley !! 
 
 ---
 
-https://github.com/Leaflet/Leaflet
+https://github.com/Leaflet/Leaflet   
 https://github.com/mpetazzoni/leaflet-gpx
 
 ---
