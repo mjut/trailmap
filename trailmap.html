@@ -27,7 +27,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.4.0/gpx.min.js"></script>
 </head>
 
-<body onload="init()">
+<body>
 
 	<div id="mapid"> </div>
 
@@ -105,30 +105,25 @@
 					mymap.fitBounds( maxBounds );
 				}
 	
-			}).addTo(mymap)
- 
- 
-			.on('click', function (e) {
 				var gpx = e.target,
-					distM = gpx.get_distance(),
-					distKm = distM / 1000,
-					distKmRnd = distKm.toFixed(1),
-					eleGain = gpx.get_elevation_gain().toFixed(),
-					eleLoss = gpx.get_elevation_loss().toFixed(),
-					name = gpx.get_name();
-
+				distM = gpx.get_distance(),
+				distKm = distM / 1000,
+				distKmRnd = distKm.toFixed(1),
+				eleGain = gpx.get_elevation_gain().toFixed(),
+				eleLoss = gpx.get_elevation_loss().toFixed(),
+				name = gpx.get_name();
+				
 				gpx
-					.getLayers()[0]
-					.bindPopup(
-						"<h5>" + name + "</h5>" +
-						"Distance " + distKmRnd + " km </br>" +
-						"Gain " +	eleGain + " m </br>" +
-						"Loss " + eleLoss +	" m"
+				.getLayers()[0]
+				.bindPopup(
+					"<h5>" + name + "</h5>" +
+					"Distance " + distKmRnd + " km </br>" +
+					"Gain " +	eleGain + " m </br>" +
+					"Loss " + eleLoss +	" m"
 				);
-			});
+			}).addTo(mymap)
 
 	 });
-
 }
 
 </script>
